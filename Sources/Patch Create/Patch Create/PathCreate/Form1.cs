@@ -53,7 +53,7 @@ namespace PathCreate
 			return BitConverter.ToString(mD.ComputeHash(inputStream)).Replace("-", string.Empty);
 		}
 
-		public void fileSove(string fileName, string text)
+		public void fileSave(string fileName, string text)
 		{
 			FileStream fileStream = new FileStream(fileName, FileMode.OpenOrCreate);
 			StreamWriter streamWriter = new StreamWriter(fileStream);
@@ -76,20 +76,17 @@ namespace PathCreate
 			}
 		}
 
-		private void CreatePatch(string PatchImput)
+		private void CreatePatch(string PatchInput)
 		{
-            //regex extension
-            string[] extensions = {".exe", ".dll", ".xem"};
-
-			string text = GetMD5HashFromFile(PatchImput).ToLower();
-			string fileName = Path.GetFileName(PatchImput);
-			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(PatchImput);
-			string text2 = Path.GetDirectoryName(PatchImput) + "\\" + fileNameWithoutExtension;
+			string text = GetMD5HashFromFile(PatchInput).ToLower();
+			string fileName = Path.GetFileName(PatchInput);
+			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(PatchInput);
+			string text2 = Path.GetDirectoryName(PatchInput) + "\\" + fileNameWithoutExtension;
 
 			md5label.Text = text;
 			FileNameLabel.Text = fileName;
 
-			using FileStream fileStream = File.OpenRead(PatchImput);
+			using FileStream fileStream = File.OpenRead(PatchInput);
 			HEADER hEADER = fileStream.ReadStruct<HEADER>();
 			FileCountLabel.Text = Convert.ToString(hEADER.FileCounts);
 
@@ -98,7 +95,7 @@ namespace PathCreate
 				File.Delete(text2 + ".pak.md5");
 			}
 
-			fileSove(text2 + ".pak.md5", text);
+			fileSave(text2 + ".pak.md5", text);
 
 			if (File.Exists(text2 + ".txt"))
 			{
@@ -107,20 +104,31 @@ namespace PathCreate
 
 			fileStream.Position = hEADER.TableOffset;
 
-			for (int i = 0; i < hEADER.FileCounts; i++)
+			for (int i = 0; i <= hEADER.FileCounts; i++)
 			{
 				string text3 = ByteToString(fileStream.ReadStruct<FILELIST>().NameFile);
 
-                //if the file inside pak endswith extension from array
-                if(text3.EndsWith(extensions[i]))
-                {
-                    fileSove(text2 + ".txt", "C " + text3);
-                }
+                /*
+                if the file inside pak endswith extension from array
+                D means delete from both physical and .pak directory
+                C means overwrite in client
+
+                Base on Sea Launcher
+
+                */
+
+                
+
+                /*if (text3.EndsWith(".exe") || text3.EndsWith(".dll") || text3.EndsWith(".xem"))
+                    fileSave(text2 + ".txt", "C " + text3);
                 else
-                {
-                    fileSove(text2 + ".txt", "D " + text3);
-                }
-			}
+                    fileSave(text2 + ".txt", "D " + text3);
+                */
+
+                //You can remove this and write a blank txt file if you don't want to delete something
+                if (text3.EndsWith(".exe") || text3.EndsWith(".dll") || text3.EndsWith(".xem"))
+                    fileSave(text2 + ".txt", "C " + text3);
+            }
 		}
 
 		public string ByteToString(byte[] bfiles)
